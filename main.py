@@ -1,5 +1,5 @@
 from game import Game
 
 game = Game()
-game.setDifficultyLevel()
+game.print_menu()
 print(game)
