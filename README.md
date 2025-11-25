@@ -26,6 +26,7 @@ A feature-rich, Python-based number guessing game with multiple difficulty level
 - Python 3.7 or higher
 
 ### Quick Start
+[Project URL](https://roadmap.sh/projects/number-guessing-game)
 [Click here to clone the repository](https://github.com/PRINCEKK122/number-guessing-game-cli.git)
 
 ```bash
@@ -39,3 +40,5 @@ python main.py
 
 # On Linux/Mac
 python3 main.py
+
+
