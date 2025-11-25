@@ -4,9 +4,9 @@ import time
 
 class Game:
     DIFFICULTY_SETTINGS = {
-        "1": {"difficulty": "easy", "maxGuessChances": 10},
-        "2": {"difficulty": "medium", "maxGuessChances": 5},
-        "3": {"difficulty": "hard", "maxGuessChances": 3},
+        "1": {"difficulty": "easy", "maxGuessChances": 10, "highScore": float("inf")},
+        "2": {"difficulty": "medium", "maxGuessChances": 5, "highScore": float("inf")},
+        "3": {"difficulty": "hard", "maxGuessChances": 3, "highScore": float("inf")},
     }
 
     def __init__(self):
@@ -15,6 +15,7 @@ class Game:
         self._maxGuessCount: int = 0
         self._cpuGuess: int = 0
         self._isGameOver: bool = False
+        self._difficultyChoice: str = ""
 
     def setDifficultyLevel(self, choice) -> None:
         while choice not in Game.DIFFICULTY_SETTINGS:
@@ -23,6 +24,10 @@ class Game:
 
         self._difficultyLevel = Game.DIFFICULTY_SETTINGS[choice]["difficulty"]
         self._maxGuessCount = Game.DIFFICULTY_SETTINGS[choice]["maxGuessChances"]
+        self._difficultyChoice = choice
+
+    def getDifficultyLevel(self) -> str:
+        return self._difficultyLevel
 
     def _getValidInput(self) -> int:
         is_valid = False
@@ -77,6 +82,7 @@ class Game:
         self._setup()
         self._printMenu()
         start = time.time()
+        hasWon = False
 
         while not self._isGameOver and self._userGuessCount < self._maxGuessCount:
             user_guess = self._getValidInput()
@@ -91,6 +97,7 @@ class Game:
                     f"🎉 Congratulations! You guessed the correct number in {self._userGuessCount} attempt(s). 🔥🔥"
                 )
                 self._isGameOver = True
+                hasWon = True
 
             if self._userGuessCount < self._maxGuessCount and self._should_offer_hint():
                 if self._getUserResponse("🤔 Stuck? Need a helping hand (yes/no): "):
@@ -101,11 +108,18 @@ class Game:
             self._isGameOver = True
 
         if self._isGameOver:
-            print(f"Game Time: {self._timeElapsed(start, time.time())} seconds")
+            self._timeElapsed(start, time.time())
+            if hasWon:
+                self._printNewHighScore(self._difficultyChoice)
             self._resetGame()
 
-    def _timeElapsed(self, start, end) -> int:
-        return int(end - start)
+    def _timeElapsed(self, start, end) -> None:
+        print(f"⏰ Time Elapsed {int(end - start)} seconds.")
+
+    def _printNewHighScore(self, choice) -> None:
+        if self._userGuessCount < Game.DIFFICULTY_SETTINGS[choice]["highScore"]:
+            Game.DIFFICULTY_SETTINGS[choice]["highScore"] = self._userGuessCount
+            print(f"🚀 New HighScore for {self._difficultyLevel.capitalize()} difficulty is {self._userGuessCount}.")
 
     def _printMenu(self) -> None:
         print()
