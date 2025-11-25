@@ -1,4 +1,5 @@
 from random import randint
+import time
 
 
 class Game:
@@ -44,7 +45,6 @@ class Game:
 
     def _resetGame(self) -> None:
         if self._getUserResponse("\nPlay again (yes/no): "):
-            print("*" * 40)
             self.play()
         else:
             print("👋 Goodbye! Thanks for playing!\n")
@@ -76,15 +76,16 @@ class Game:
     def play(self) -> None:
         self._setup()
         self._printMenu()
+        start = time.time()
 
         while not self._isGameOver and self._userGuessCount < self._maxGuessCount:
             user_guess = self._getValidInput()
             self._userGuessCount += 1
 
             if self._cpuGuess < user_guess:
-                print(f"❌ Incorrect! The number is less than {user_guess}.")
+                print(f"❌ Incorrect! The number is less than {user_guess}.\n")
             elif self._cpuGuess > user_guess:
-                print(f"❌ Incorrect! The number is greater than {user_guess}.")
+                print(f"❌ Incorrect! The number is greater than {user_guess}.\n")
             else:
                 print(
                     f"🎉 Congratulations! You guessed the correct number in {self._userGuessCount} attempt(s). 🔥🔥"
@@ -92,7 +93,7 @@ class Game:
                 self._isGameOver = True
 
             if self._userGuessCount < self._maxGuessCount and self._should_offer_hint():
-                if self._getUserResponse("\n🤔 Stuck? Need a helping hand (yes/no): "):
+                if self._getUserResponse("🤔 Stuck? Need a helping hand (yes/no): "):
                     self._hint()
 
         if not self._isGameOver and self._userGuessCount == self._maxGuessCount:
@@ -100,12 +101,17 @@ class Game:
             self._isGameOver = True
 
         if self._isGameOver:
+            print(f"Game Time: {self._timeElapsed(start, time.time())} seconds")
             self._resetGame()
+
+    def _timeElapsed(self, start, end) -> int:
+        return int(end - start)
 
     def _printMenu(self) -> None:
         print()
         print("*" * 50)
         print("Welcome to the Number Guessing Game!")
+        print("*" * 50)
         print("I'm thinking of a number between 1 and 100.")
 
         print("Please select the difficulty level:")
