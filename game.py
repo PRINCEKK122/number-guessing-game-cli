@@ -2,64 +2,123 @@ from random import randint
 
 
 class Game:
+    DIFFICULTY_SETTINGS = {
+        "1": {"difficulty": "easy", "maxGuessChances": 10},
+        "2": {"difficulty": "medium", "maxGuessChances": 5},
+        "3": {"difficulty": "hard", "maxGuessChances": 3},
+    }
+
     def __init__(self):
-        self._isRunning = True
-        self._cpuGuess = randint(1, 100)
-        self._difficultyLevel = ""
-        self._userGuessCount = 0
-        self._maxGuessCount = 0
+        self._difficultyLevel: str = ""
+        self._userGuessCount: int = 0
+        self._maxGuessCount: int = 0
+        self._cpuGuess: int = 0
+        self._isGameOver: bool = False
 
-    def get_cpu_guess(self):
-        return self._cpuGuess
+    def setDifficultyLevel(self, choice) -> None:
+        while choice not in Game.DIFFICULTY_SETTINGS:
+            print("Invalid choice selected. Let's try again.\n")
+            choice = input("Please select a difficulty level: ")
 
-    def getDifficultyLevel(self):
-        return self._difficultyLevel
+        self._difficultyLevel = Game.DIFFICULTY_SETTINGS[choice]["difficulty"]
+        self._maxGuessCount = Game.DIFFICULTY_SETTINGS[choice]["maxGuessChances"]
 
-    def setDifficultyLevel(self, choice):
+    def _getValidInput(self) -> int:
         is_valid = False
+
+        number = None
         while not is_valid:
-            if choice == "1":
-                self._difficultyLevel = "easy"
-                self._maxGuessCount = 10
-                is_valid = True
-            elif choice == "2":
-                self._difficultyLevel = "medium"
-                self._maxGuessCount = 5
-                is_valid = True
-            elif choice == "3":
-                self._difficultyLevel = "hard"
-                self._maxGuessCount = 3
+            user_input = input("Enter your guess: ")
+            if user_input.isdigit():
+                number = int(user_input)
                 is_valid = True
             else:
-                print("Invalid choice selected. Let's try again\n")
-                choice = input("Please select a difficulty level: ")
+                print("Invalid input!\n")
 
-    def play(self, guess: str):
-        if not guess.isdigit():
-            raise ValueError("Please enter a valid digit")
+        return number
 
-        while self._userGuessCount < self._maxGuessCount:
-            if guess < self._cpuGuess:
-                print(f"Incorrect! The number is less than {self._cpuGuess}.")
-                self._userGuessCount += 1
-            elif guess > self._cpuGuess:
-                print(f"Incorrect! The number is greater than {self._cpuGuess}.")
-                self._userGuessCount += 1
+    def _setup(self) -> None:
+        self._cpuGuess = randint(1, 100)
+        self._userGuessCount = 0
+        self._isGameOver = False
+
+    def _resetGame(self) -> None:
+        if self._getUserResponse("\nPlay again (yes/no): "):
+            print("*" * 40)
+            self.play()
+        else:
+            print("👋 Goodbye! Thanks for playing!\n")
+
+    def _hint(self) -> None:
+        lowBound = max(1, self._cpuGuess - 10)
+        highBound = min(100, self._cpuGuess + 10)
+
+        print(f"💡 Hint 1: The number is between {lowBound} and {highBound}")
+
+        output = "even" if self._cpuGuess % 2 == 0 else "odd"
+        print(f"💡 Hint 2: The number is {output}\n")
+
+    def _should_offer_hint(self):
+        remainingGuessLeft = self._maxGuessCount - self._userGuessCount
+        return remainingGuessLeft <= 2 and not self._isGameOver
+
+    def _getUserResponse(self, prompt: str) -> bool:
+        while True:
+            user_response = input(prompt).strip().lower()
+
+            if user_response in ("y", "yes"):
+                return True
+            elif user_response in ("n", "no"):
+                return False
+            else:
+                print("Please enter '(y)es' or '(n)o'")
+
+    def play(self) -> None:
+        self._setup()
+        self._printMenu()
+
+        while not self._isGameOver and self._userGuessCount < self._maxGuessCount:
+            user_guess = self._getValidInput()
+            self._userGuessCount += 1
+
+            if self._cpuGuess < user_guess:
+                print(f"❌ Incorrect! The number is less than {user_guess}.")
+            elif self._cpuGuess > user_guess:
+                print(f"❌ Incorrect! The number is greater than {user_guess}.")
             else:
                 print(
-                    f"Congratulation! You guessed the correct number in {self._userGuessCount} attempts."
+                    f"🎉 Congratulations! You guessed the correct number in {self._userGuessCount} attempt(s). 🔥🔥"
                 )
+                self._isGameOver = True
 
-    def print_menu(self):
+            if self._userGuessCount < self._maxGuessCount and self._should_offer_hint():
+                if self._getUserResponse("\n🤔 Stuck? Need a helping hand (yes/no): "):
+                    self._hint()
+
+        if not self._isGameOver and self._userGuessCount == self._maxGuessCount:
+            print(f"💀 Game over! The number was {self._cpuGuess}.")
+            self._isGameOver = True
+
+        if self._isGameOver:
+            self._resetGame()
+
+    def _printMenu(self) -> None:
+        print()
+        print("*" * 50)
         print("Welcome to the Number Guessing Game!")
         print("I'm thinking of a number between 1 and 100.")
-        print("You have 5 chances to guess the correct number")
-        print()
+
         print("Please select the difficulty level:")
-        print(f"1. Easy (10 chances)\n2. Medium (5 chances)\nHard (3 chances)")
-        print()
+        print(f"1. Easy (10 chances)\n2. Medium (5 chances)\n3. Hard (3 chances)\n")
+
         print("Enter your choice: ", end="")
         self.setDifficultyLevel(input().strip())
 
+        print()
+        print(
+            f"Great! You have selected the {self._difficultyLevel.capitalize()} difficulty level."
+        )
+        print("Let's start the game!\n")
+
     def __str__(self):
-        return f"CPU Guess: {self._cpuGuess}\nGame Difficulty: {self._difficultyLevel}"
+        return f"Secret Number: {self._cpuGuess}\nDifficulty: {self._difficultyLevel}"
